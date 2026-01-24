@@ -4,10 +4,11 @@ Welcome to `MyTinyWebServer`! This project is a lightweight, from-scratch web se
 
 ## Project Structure
 
-The solution is divided into four distinct projects, each with a clear responsibility:
+The solution is divided into five distinct projects, each with a clear responsibility:
 
 - **`MyTinyWebServer`**: The main executable project that hosts and runs the web server. It composes the services and wires up the application.
 - **`TinyWebServerLib`**: The core web server library. It contains all the essential components for handling HTTP requests, routing, and managing the server lifecycle.
+- **`TinyWebServerLib.Tests`**: Comprehensive unit and integration tests for the core library, using xUnit and FluentAssertions.
 - **`CustomerApi`**: A sample API project containing a `CustomersController`. It demonstrates how to build an API using the `TinyWebServerLib` framework.
 - **`TinyLogger`**: A reusable, aspect-oriented logging library. It uses `Castle.Core`'s DynamicProxy to intercept method calls and provide automatic logging, demonstrating powerful metaprogramming concepts.
 
@@ -145,12 +146,49 @@ Here is a step-by-step walkthrough of what happens when a `POST /customers` requ
     - `GET http://localhost:4221/customers/123`
     - `POST http://localhost:4221/customers` (with a JSON body like `{"id": 10, "name": "New Customer"}`)
 
+## Running Tests
+
+The project includes comprehensive unit and integration tests using **xUnit** and **FluentAssertions**.
+
+### Run All Tests
+
+```bash
+dotnet test
+```
+
+### Run Tests with Code Coverage
+
+```bash
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+Coverage reports are generated in `TestResults/` folder in Cobertura format.
+
+### Generate HTML Coverage Report
+
+First, install the ReportGenerator tool:
+
+```bash
+dotnet tool install -g dotnet-reportgenerator-globaltool
+```
+
+Then generate the report:
+
+```bash
+reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+```
+
+Open `coveragereport/index.html` in a browser to view the detailed coverage report.
+
 ## Technologies Used
 
 - **.NET 8** - Target framework
 - **Castle.Core** - Dynamic proxy generation for AOP
 - **Microsoft.Extensions.DependencyInjection** - Dependency injection container
 - **Microsoft.Extensions.Logging** - Logging abstractions
+- **xUnit** - Testing framework
+- **FluentAssertions** - Fluent assertion library
+- **Coverlet** - Code coverage collection
 
 ## License
 

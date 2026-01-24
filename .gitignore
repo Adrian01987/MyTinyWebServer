@@ -37,6 +37,9 @@ bld/
 # Test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+*.trx
+coveragereport/
+**/coverage.cobertura.xml
 
 # JetBrains Rider
 *.sln.iml
