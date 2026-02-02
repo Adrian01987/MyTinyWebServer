@@ -146,4 +146,104 @@ public class HttpRequestTests
         // Assert
         request.Body.Should().Be("{\"key\":\"value\"}");
     }
+
+    [Fact]
+    public void PathBase_WithoutQueryString_ReturnsFullPath()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/customers/123", [], "");
+
+        // Act & Assert
+        request.PathBase.Should().Be("/customers/123");
+    }
+
+    [Fact]
+    public void PathBase_WithQueryString_ReturnsPathWithoutQuery()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/search?q=hello&page=1", [], "");
+
+        // Act & Assert
+        request.PathBase.Should().Be("/search");
+    }
+
+    [Fact]
+    public void QueryParameters_WithNoQueryString_ReturnsEmptyDictionary()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/customers", [], "");
+
+        // Act & Assert
+        request.QueryParameters.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void QueryParameters_WithSingleParameter_ParsesCorrectly()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/search?q=hello", [], "");
+
+        // Act & Assert
+        request.QueryParameters.Should().ContainKey("q");
+        request.QueryParameters["q"].Should().Be("hello");
+    }
+
+    [Fact]
+    public void QueryParameters_WithMultipleParameters_ParsesAll()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/search?q=hello&page=2&sort=desc", [], "");
+
+        // Act & Assert
+        request.QueryParameters.Should().HaveCount(3);
+        request.QueryParameters["q"].Should().Be("hello");
+        request.QueryParameters["page"].Should().Be("2");
+        request.QueryParameters["sort"].Should().Be("desc");
+    }
+
+    [Fact]
+    public void QueryParameters_WithEncodedValues_DecodesCorrectly()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/search?q=hello%20world&name=John%26Jane", [], "");
+
+        // Act & Assert
+        request.QueryParameters["q"].Should().Be("hello world");
+        request.QueryParameters["name"].Should().Be("John&Jane");
+    }
+
+    [Fact]
+    public void QueryParameters_WithEmptyValue_ReturnsEmptyString()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/search?flag=&name=test", [], "");
+
+        // Act & Assert
+        request.QueryParameters["flag"].Should().BeEmpty();
+        request.QueryParameters["name"].Should().Be("test");
+    }
+
+    [Fact]
+    public void QueryParameters_WithNoValue_ReturnsEmptyString()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/search?flag", [], "");
+
+        // Act & Assert
+        request.QueryParameters["flag"].Should().BeEmpty();
+    }
+
+    [Fact]
+    public void QueryParameters_IsCachedOnSubsequentAccess()
+    {
+        // Arrange
+        var request = new HttpRequest("GET", "/search?q=test", [], "");
+
+        // Act
+        var first = request.QueryParameters;
+        var second = request.QueryParameters;
+
+        // Assert - Should return the same dictionary instance
+        first.Should().BeSameAs(second);
+    }
 }

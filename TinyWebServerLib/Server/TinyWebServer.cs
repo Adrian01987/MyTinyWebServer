@@ -7,30 +7,60 @@ using TinyWebServerLib.Routing;
 
 namespace TinyWebServerLib.Server;
 
-public class TinyWebServer(IPAddress address, int port, RequestPipeline pipeline, IServiceProvider serviceProvider)
+/// <summary>
+/// A lightweight HTTP server that handles incoming TCP connections and processes HTTP requests.
+/// Implements <see cref="IAsyncDisposable"/> for proper resource cleanup.
+/// </summary>
+public class TinyWebServer : IAsyncDisposable
 {
-    private readonly TcpListener listener = new(address, port);
-    private readonly RequestPipeline pipeline = pipeline;
-    private readonly IServiceProvider serviceProvider = serviceProvider;
+    private readonly TcpListener listener;
+    private readonly RequestPipeline pipeline;
+    private readonly IServiceProvider serviceProvider;
+    private bool disposed;
 
+    /// <summary>
+    /// Creates a new instance of the TinyWebServer.
+    /// </summary>
+    /// <param name="address">The IP address to listen on.</param>
+    /// <param name="port">The port to listen on.</param>
+    /// <param name="pipeline">The request processing pipeline.</param>
+    /// <param name="serviceProvider">The dependency injection service provider.</param>
+    public TinyWebServer(IPAddress address, int port, RequestPipeline pipeline, IServiceProvider serviceProvider)
+    {
+        listener = new TcpListener(address, port);
+        this.pipeline = pipeline;
+        this.serviceProvider = serviceProvider;
+    }
 
+    /// <summary>
+    /// Starts the server and begins accepting connections.
+    /// </summary>
+    /// <param name="token">A cancellation token to stop the server.</param>
+    /// <exception cref="ObjectDisposedException">Thrown if the server has been disposed.</exception>
     public async Task StartAsync(CancellationToken token)
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+
         listener.Start();
-        while (!token.IsCancellationRequested)
+        try
         {
-            try 
+            while (!token.IsCancellationRequested)
             {
-                TcpClient client = await listener.AcceptTcpClientAsync(token);
-                _ = HandleClientAsync(client, token);
+                try
+                {
+                    TcpClient client = await listener.AcceptTcpClientAsync(token);
+                    _ = HandleClientAsync(client, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected during shutdown - don't log as error
+                }
             }
-            catch(OperationCanceledException ocEx) 
-            {
-                Console.WriteLine(ocEx.Message);
-            }
-           
         }
-        listener.Stop();
+        finally
+        {
+            listener.Stop();
+        }
     }
 
     private async Task HandleClientAsync(TcpClient client, CancellationToken token)
@@ -62,7 +92,7 @@ public class TinyWebServer(IPAddress address, int port, RequestPipeline pipeline
             byte[] responseBytes = Encoding.UTF8.GetBytes(responseText);
             await stream.WriteAsync(responseBytes, token);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
             var response = new HttpResponse(500, [], "Internal Server Error");
@@ -75,5 +105,27 @@ public class TinyWebServer(IPAddress address, int port, RequestPipeline pipeline
         {
             client.Close();
         }
+    }
+
+    /// <summary>
+    /// Disposes the server and releases all resources.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (disposed) return;
+        disposed = true;
+
+        listener.Stop();
+
+        if (serviceProvider is IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync();
+        }
+        else if (serviceProvider is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

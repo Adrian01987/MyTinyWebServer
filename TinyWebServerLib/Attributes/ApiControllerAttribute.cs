@@ -39,3 +39,30 @@ public class HttpGetAttribute(string? route = null) : HttpMethodAttribute("GET",
 public class HttpPostAttribute(string? route = null) : HttpMethodAttribute("POST", route)
 {
 }
+
+/// <summary>
+/// Maps a controller action to HTTP PUT requests.
+/// </summary>
+/// <param name="route">The route template (e.g., "customers/{id}").</param>
+[AttributeUsage(AttributeTargets.Method)]
+public class HttpPutAttribute(string? route = null) : HttpMethodAttribute("PUT", route)
+{
+}
+
+/// <summary>
+/// Maps a controller action to HTTP DELETE requests.
+/// </summary>
+/// <param name="route">The route template (e.g., "customers/{id}").</param>
+[AttributeUsage(AttributeTargets.Method)]
+public class HttpDeleteAttribute(string? route = null) : HttpMethodAttribute("DELETE", route)
+{
+}
+
+/// <summary>
+/// Maps a controller action to HTTP PATCH requests.
+/// </summary>
+/// <param name="route">The route template (e.g., "customers/{id}").</param>
+[AttributeUsage(AttributeTargets.Method)]
+public class HttpPatchAttribute(string? route = null) : HttpMethodAttribute("PATCH", route)
+{
+}

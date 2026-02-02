@@ -33,11 +33,20 @@ public partial class Router
     /// <returns>The HTTP response from the matched handler, or a 404 response if no route matches.</returns>
     public async Task<HttpResponse> RouteAsync(HttpRequest request)
     {
+        // Normalize the path for case-insensitive matching
+        var normalizedPath = request.Path.ToLowerInvariant();
+        // Remove query string for route matching
+        var queryIndex = normalizedPath.IndexOf('?');
+        if (queryIndex >= 0)
+        {
+            normalizedPath = normalizedPath[..queryIndex];
+        }
+
         foreach (var (method, pattern, handler) in routes)
         {
             if (request.Method.Equals(method, StringComparison.OrdinalIgnoreCase))
             {
-                var match = pattern.Match(request.Path);
+                var match = pattern.Match(normalizedPath);
                 if (match.Success)
                 {
                     foreach (var groupName in pattern.GetGroupNames())

@@ -160,4 +160,70 @@ public class HttpParserTests
         request.RouteParameters.Should().NotBeNull();
         request.RouteParameters.Should().BeEmpty();
     }
+
+    [Fact]
+    public void Parse_EmptyRequest_ThrowsHttpParseException()
+    {
+        // Arrange
+        var requestText = "";
+
+        // Act
+        Action act = () => HttpParser.Parse(requestText);
+
+        // Assert
+        act.Should().Throw<HttpParseException>()
+            .WithMessage("Empty request");
+    }
+
+    [Fact]
+    public void Parse_WhitespaceOnlyRequest_ThrowsHttpParseException()
+    {
+        // Arrange
+        var requestText = "   \r\n  ";
+
+        // Act
+        Action act = () => HttpParser.Parse(requestText);
+
+        // Assert
+        act.Should().Throw<HttpParseException>()
+            .WithMessage("Empty request");
+    }
+
+    [Fact]
+    public void Parse_InvalidRequestLine_ThrowsHttpParseException()
+    {
+        // Arrange
+        var requestText = "INVALID\r\n\r\n";
+
+        // Act
+        Action act = () => HttpParser.Parse(requestText);
+
+        // Assert
+        act.Should().Throw<HttpParseException>()
+            .WithMessage("Invalid request line: 'INVALID'");
+    }
+
+    [Fact]
+    public void Parse_NullRequest_ThrowsHttpParseException()
+    {
+        // Act
+        Action act = () => HttpParser.Parse(null!);
+
+        // Assert
+        act.Should().Throw<HttpParseException>();
+    }
+
+    [Fact]
+    public void Parse_MalformedHeader_SkipsHeader()
+    {
+        // Arrange - Header without ": " separator
+        var requestText = "GET /test HTTP/1.1\r\nBadHeader\r\nHost: localhost\r\n\r\n";
+
+        // Act
+        var request = HttpParser.Parse(requestText);
+
+        // Assert
+        request.Headers.Should().ContainKey("Host");
+        request.Headers.Should().NotContainKey("BadHeader");
+    }
 }
