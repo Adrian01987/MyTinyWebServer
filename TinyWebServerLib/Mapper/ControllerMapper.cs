@@ -60,10 +60,11 @@ public static class ControllerMapper
                             {
                                 arguments[i] = JsonSerializer.Deserialize(request.Body, param.ParameterType, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                             }
-                            catch
+                            catch (JsonException ex)
                             {
-                                // Could lead to a 400 Bad Request response
-                                arguments[i] = null;
+                                return new HttpResponse(400,
+                                    new Dictionary<string, string> { ["Content-Type"] = "text/plain" },
+                                    $"Invalid request body: {ex.Message}");
                             }
                         }
                     }

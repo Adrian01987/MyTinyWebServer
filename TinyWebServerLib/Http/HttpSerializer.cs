@@ -6,13 +6,20 @@ public static class HttpSerializer
 {
     public static string Serialize(HttpResponse response)
     {
+        // Auto-add Content-Length if not already present and body is non-empty
+        if (!response.Headers.ContainsKey("Content-Length") && !string.IsNullOrEmpty(response.Body))
+        {
+            response.Headers["Content-Length"] = Encoding.UTF8.GetByteCount(response.Body).ToString();
+        }
+
         StringBuilder sb = new();
-        sb.AppendLine($"HTTP/1.1 {response.StatusCode} {GetReasonPhrase(response.StatusCode)}");
+        // Use explicit \r\n (HTTP requires CRLF, not platform-dependent line endings)
+        sb.Append($"HTTP/1.1 {response.StatusCode} {GetReasonPhrase(response.StatusCode)}\r\n");
         foreach (var header in response.Headers)
         {
-            sb.AppendLine($"{header.Key}: {header.Value}");
+            sb.Append($"{header.Key}: {header.Value}\r\n");
         }
-        sb.AppendLine();
+        sb.Append("\r\n");
         sb.Append(response.Body);
         return sb.ToString();
     }

@@ -24,7 +24,7 @@ public class TinyWebServerBuilder
     /// </summary>
     /// <param name="middleware">A function that receives the next middleware delegate and returns a new delegate that wraps it.</param>
     /// <returns>The builder instance for method chaining.</returns>
-    public TinyWebServerBuilder Use(Func<Func<HttpRequest, Task<HttpResponse>>, Func<HttpRequest, Task<HttpResponse>>> middleware)
+    public TinyWebServerBuilder Use(Func<RequestHandler, RequestHandler> middleware)
     {
         middlewareBuilder.Use(middleware);
         return this;
@@ -37,9 +37,9 @@ public class TinyWebServerBuilder
     /// <param name="route">The route pattern, which may contain parameters like <c>{id}</c>.</param>
     /// <param name="handler">The async function that handles matching requests.</param>
     /// <returns>The builder instance for method chaining.</returns>
-    public TinyWebServerBuilder Map(string httpMethod, string route, Func<HttpRequest, Task<HttpResponse>> handler)
+    public TinyWebServerBuilder Map(string httpMethod, string route, RequestHandler handler)
     {
-        router.Map(httpMethod, route.ToLower(), handler);
+        router.Map(httpMethod, route, handler);
         return this;
     }
 
@@ -73,7 +73,7 @@ public class TinyWebServerBuilder
     /// <returns>A new <see cref="TinyWebServer"/> ready to be started.</returns>
     public TinyWebServer Build()
     {
-        Func<HttpRequest, Task<HttpResponse>> terminal = router.RouteAsync;
+        RequestHandler terminal = router.RouteAsync;
         var pipelineDelegate = middlewareBuilder.Build(terminal);
         RequestPipeline pipeline = new(pipelineDelegate);
         return new TinyWebServer(address, port, pipeline, serviceProvider ?? new ServiceCollection().BuildServiceProvider());

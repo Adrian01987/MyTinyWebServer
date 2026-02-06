@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -16,6 +17,8 @@ public class TinyWebServer : IAsyncDisposable
     private readonly TcpListener listener;
     private readonly RequestPipeline pipeline;
     private readonly IServiceProvider serviceProvider;
+    private readonly ILogger? logger;
+    private readonly List<Task> activeConnections = [];
     private bool disposed;
 
     /// <summary>
@@ -30,6 +33,7 @@ public class TinyWebServer : IAsyncDisposable
         listener = new TcpListener(address, port);
         this.pipeline = pipeline;
         this.serviceProvider = serviceProvider;
+        this.logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<TinyWebServer>();
     }
 
     /// <summary>
@@ -49,7 +53,10 @@ public class TinyWebServer : IAsyncDisposable
                 try
                 {
                     TcpClient client = await listener.AcceptTcpClientAsync(token);
-                    _ = HandleClientAsync(client, token);
+                    var task = HandleClientAsync(client, token);
+                    activeConnections.Add(task);
+                    // Clean up completed tasks periodically
+                    activeConnections.RemoveAll(t => t.IsCompleted);
                 }
                 catch (OperationCanceledException)
                 {
@@ -59,6 +66,8 @@ public class TinyWebServer : IAsyncDisposable
         }
         finally
         {
+            // Wait for all in-flight requests to complete
+            await Task.WhenAll(activeConnections);
             listener.Stop();
         }
     }
@@ -88,15 +97,19 @@ public class TinyWebServer : IAsyncDisposable
             }
 
             HttpResponse response = await pipeline.RequestDelegate(request);
+            response.Headers["Connection"] = "close";
             string responseText = HttpSerializer.Serialize(response);
             byte[] responseBytes = Encoding.UTF8.GetBytes(responseText);
             await stream.WriteAsync(responseBytes, token);
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            var response = new HttpResponse(500, [], "Internal Server Error");
-            response.Headers["Content-Type"] = "text/plain";
+            logger?.LogError(ex, "Error handling request");
+            var response = new HttpResponse(500, new Dictionary<string, string>
+            {
+                ["Content-Type"] = "text/plain",
+                ["Connection"] = "close"
+            }, "Internal Server Error");
             string responseText = HttpSerializer.Serialize(response);
             byte[] responseBytes = Encoding.UTF8.GetBytes(responseText);
             await stream.WriteAsync(responseBytes, token);

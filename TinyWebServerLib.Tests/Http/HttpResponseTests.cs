@@ -25,24 +25,25 @@ public class HttpResponseTests
     }
 
     [Fact]
-    public void Constructor_WithNullHeaders_SetsEmptyDictionary()
+    public void Constructor_WithNullHeaders_ThrowsArgumentNullException()
     {
         // Act
-        var response = new HttpResponse(200, null!, "");
+        Action act = () => new HttpResponse(200, null!, "");
 
         // Assert
-        response.Headers.Should().NotBeNull();
-        response.Headers.Should().BeEmpty();
+        act.Should().Throw<ArgumentNullException>()
+            .And.ParamName.Should().Be("headers");
     }
 
     [Fact]
-    public void Constructor_WithNullBody_SetsEmptyString()
+    public void Constructor_WithNullBody_ThrowsArgumentNullException()
     {
         // Act
-        var response = new HttpResponse(200, [], null!);
+        Action act = () => new HttpResponse(200, new Dictionary<string, string>(), null!);
 
         // Assert
-        response.Body.Should().BeEmpty();
+        act.Should().Throw<ArgumentNullException>()
+            .And.ParamName.Should().Be("body");
     }
 
     [Fact]

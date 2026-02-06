@@ -47,10 +47,10 @@ namespace TinyLogger
                 var logger = sp.GetRequiredService<ILogger<T>>();
                 var proxyGenerator = new ProxyGenerator();
                 var interceptor = new LoggerInterceptor(logger);
-                
-                // Resolve the actual instance from the scope
-                // To avoid circular dependency, we resolve it "manually" from the list of services
-                var actual = sp.GetServices<T>().First(s => s.GetType() == typeof(T));
+
+                // Use ActivatorUtilities to create the instance directly,
+                // avoiding circular dependency with GetServices
+                var actual = ActivatorUtilities.CreateInstance<T>(sp);
                 return proxyGenerator.CreateClassProxyWithTarget(actual, interceptor);
             });
             return services;

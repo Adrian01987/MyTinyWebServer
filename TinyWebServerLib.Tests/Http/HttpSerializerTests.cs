@@ -153,8 +153,10 @@ public class HttpSerializerTests
     var lines = result.Split("\r\n");
     lines[0].Should().Be("HTTP/1.1 200 OK");
     lines[1].Should().Be("Content-Type: application/json");
-    lines[2].Should().BeEmpty(); // Empty line separating headers from body
-    lines[3].Should().Be(body);
+    // Content-Length is auto-added
+    lines[2].Should().StartWith("Content-Length:");
+    lines[3].Should().BeEmpty(); // Empty line separating headers from body
+    lines[4].Should().Be(body);
   }
 
   [Fact]

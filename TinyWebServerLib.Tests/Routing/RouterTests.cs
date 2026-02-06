@@ -182,17 +182,17 @@ public class RouterTests
   }
 
   [Fact]
-  public void Map_RouteWithoutLeadingSlash_NormalizesRoute()
+  public async Task Map_RouteWithoutLeadingSlash_NormalizesRoute()
   {
     // Arrange
     var router = new Router();
 
     // Act - This should not throw
-    router.Map("GET", "api/test", _ => Task.FromResult(new HttpResponse(200, [], "Success")));
+    router.Map("GET", "api/test", _ => Task.FromResult(new HttpResponse(200, new Dictionary<string, string>(), "Success")));
 
     // Assert - Route should be accessible with leading slash
-    var request = new HttpRequest("GET", "/api/test", [], "");
-    var response = router.RouteAsync(request).Result;
+    var request = new HttpRequest("GET", "/api/test", new Dictionary<string, string>(), "");
+    var response = await router.RouteAsync(request);
     response.StatusCode.Should().Be(200);
   }
 

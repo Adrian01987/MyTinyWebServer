@@ -8,7 +8,9 @@ namespace TinyLogger
     public class LoggerInterceptor(ILogger logger) : IInterceptor
     {
         private readonly ILogger _logger = logger;
-        private static readonly MethodInfo _interceptAsyncMethod = typeof(LoggerInterceptor).GetMethod(nameof(InterceptAsync), BindingFlags.NonPublic | BindingFlags.Instance)!;
+        private static readonly MethodInfo _interceptAsyncMethod = typeof(LoggerInterceptor)
+            .GetMethod(nameof(InterceptAsync), BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException($"Could not find method {nameof(InterceptAsync)} on {nameof(LoggerInterceptor)}");
 
         public void Intercept(IInvocation invocation)
         {

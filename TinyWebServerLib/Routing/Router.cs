@@ -9,7 +9,7 @@ namespace TinyWebServerLib.Routing;
 /// </summary>
 public partial class Router
 {
-    private readonly List<(string Method, Regex Pattern, Func<HttpRequest, Task<HttpResponse>> Handler)> routes = [];
+    private readonly List<(string Method, Regex Pattern, RequestHandler Handler)> routes = [];
 
     /// <summary>
     /// Registers a route pattern with a handler for a specific HTTP method.
@@ -17,11 +17,13 @@ public partial class Router
     /// <param name="httpMethod">The HTTP method (GET, POST, PUT, DELETE, etc.).</param>
     /// <param name="route">The route pattern. Use <c>{paramName}</c> for route parameters.</param>
     /// <param name="handler">The async function to handle matching requests.</param>
-    public void Map(string httpMethod, string route, Func<HttpRequest, Task<HttpResponse>> handler)
+    public void Map(string httpMethod, string route, RequestHandler handler)
     {
         // Normalize the route to ensure it starts with a slash
         var normalizedRoute = route.StartsWith('/') ? route : "/" + route;
-        var pattern = new Regex($"^{Regex.Replace(normalizedRoute, @"\{(\w+)\}", @"(?<$1>\w+)")}$");
+        var pattern = new Regex(
+            $"^{Regex.Replace(normalizedRoute, @"\{(\w+)\}", @"(?<$1>[^/]+)")}$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
         routes.Add((httpMethod, pattern, handler));
     }
 
@@ -33,20 +35,20 @@ public partial class Router
     /// <returns>The HTTP response from the matched handler, or a 404 response if no route matches.</returns>
     public async Task<HttpResponse> RouteAsync(HttpRequest request)
     {
-        // Normalize the path for case-insensitive matching
-        var normalizedPath = request.Path.ToLowerInvariant();
         // Remove query string for route matching
-        var queryIndex = normalizedPath.IndexOf('?');
+        var path = request.Path;
+        var queryIndex = path.IndexOf('?');
         if (queryIndex >= 0)
         {
-            normalizedPath = normalizedPath[..queryIndex];
+            path = path[..queryIndex];
         }
 
         foreach (var (method, pattern, handler) in routes)
         {
             if (request.Method.Equals(method, StringComparison.OrdinalIgnoreCase))
             {
-                var match = pattern.Match(normalizedPath);
+                // Case-insensitive matching is handled by RegexOptions.IgnoreCase
+                var match = pattern.Match(path);
                 if (match.Success)
                 {
                     foreach (var groupName in pattern.GetGroupNames())

@@ -2,7 +2,7 @@
 
 namespace TinyWebServerLib.Routing;
 
-public class RequestPipeline(Func<HttpRequest, Task<HttpResponse>> requestDelegate)
+public class RequestPipeline(RequestHandler requestDelegate)
 {
-    public Func<HttpRequest, Task<HttpResponse>> RequestDelegate { get; init; } = requestDelegate;
+    public RequestHandler RequestDelegate { get; init; } = requestDelegate;
 }

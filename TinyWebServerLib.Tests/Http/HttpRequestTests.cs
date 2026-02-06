@@ -27,44 +27,47 @@ public class HttpRequestTests
     }
 
     [Fact]
-    public void Constructor_WithNullMethod_SetsEmptyString()
+    public void Constructor_WithNullMethod_ThrowsArgumentNullException()
     {
         // Act
-        var request = new HttpRequest(null!, "/test", [], "");
+        Action act = () => new HttpRequest(null!, "/test", new Dictionary<string, string>(), "");
 
         // Assert
-        request.Method.Should().BeEmpty();
+        act.Should().Throw<ArgumentNullException>()
+            .And.ParamName.Should().Be("method");
     }
 
     [Fact]
-    public void Constructor_WithNullPath_SetsEmptyString()
+    public void Constructor_WithNullPath_ThrowsArgumentNullException()
     {
         // Act
-        var request = new HttpRequest("GET", null!, [], "");
+        Action act = () => new HttpRequest("GET", null!, new Dictionary<string, string>(), "");
 
         // Assert
-        request.Path.Should().BeEmpty();
+        act.Should().Throw<ArgumentNullException>()
+            .And.ParamName.Should().Be("path");
     }
 
     [Fact]
-    public void Constructor_WithNullHeaders_SetsEmptyDictionary()
+    public void Constructor_WithNullHeaders_ThrowsArgumentNullException()
     {
         // Act
-        var request = new HttpRequest("GET", "/test", null!, "");
+        Action act = () => new HttpRequest("GET", "/test", null!, "");
 
         // Assert
-        request.Headers.Should().NotBeNull();
-        request.Headers.Should().BeEmpty();
+        act.Should().Throw<ArgumentNullException>()
+            .And.ParamName.Should().Be("headers");
     }
 
     [Fact]
-    public void Constructor_WithNullBody_SetsEmptyString()
+    public void Constructor_WithNullBody_ThrowsArgumentNullException()
     {
         // Act
-        var request = new HttpRequest("GET", "/test", [], null!);
+        Action act = () => new HttpRequest("GET", "/test", new Dictionary<string, string>(), null!);
 
         // Assert
-        request.Body.Should().BeEmpty();
+        act.Should().Throw<ArgumentNullException>()
+            .And.ParamName.Should().Be("body");
     }
 
     [Fact]

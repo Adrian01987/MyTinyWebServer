@@ -81,9 +81,10 @@ public class HttpParserTests
     }
 
     [Fact]
-    public void Parse_RequestWithBody_ParsesBody()
+    public void Parse_RequestWithBody_ReturnsEmptyBody()
     {
-        // Arrange
+        // Arrange - Body parsing is handled by the server via Content-Length,
+        // not by the parser. The parser returns an empty body.
         var body = "{\"id\":1,\"name\":\"Test Customer\"}";
         var requestText = $"POST /api/customers HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\n\r\n{body}";
 
@@ -91,7 +92,7 @@ public class HttpParserTests
         var request = HttpParser.Parse(requestText);
 
         // Assert
-        request.Body.Should().Be(body);
+        request.Body.Should().BeEmpty();
     }
 
     [Fact]
@@ -108,9 +109,9 @@ public class HttpParserTests
     }
 
     [Fact]
-    public void Parse_RequestWithMultilineBody_ParsesEntireBody()
+    public void Parse_RequestWithMultilineBody_ReturnsEmptyBody()
     {
-        // Arrange
+        // Arrange - Body parsing is handled by the server, not the parser
         var body = "line1\r\nline2\r\nline3";
         var requestText = $"POST /api/test HTTP/1.1\r\nHost: localhost\r\n\r\n{body}";
 
@@ -118,7 +119,7 @@ public class HttpParserTests
         var request = HttpParser.Parse(requestText);
 
         // Assert
-        request.Body.Should().Be(body);
+        request.Body.Should().BeEmpty();
     }
 
     [Fact]

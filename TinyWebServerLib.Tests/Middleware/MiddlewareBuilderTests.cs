@@ -188,23 +188,28 @@ public class MiddlewareBuilderTests
     }
 
     [Fact]
-    public void Build_ReturnsNewPipelineEachTime()
+    public async Task Build_ReturnsNewPipelineEachTime()
     {
         // Arrange
         var builder = new MiddlewareBuilder();
         builder.Use(next => next); // Pass-through middleware
 
         Func<HttpRequest, Task<HttpResponse>> terminal = _ =>
-            Task.FromResult(new HttpResponse(200, [], "Done"));
+            Task.FromResult(new HttpResponse(200, new Dictionary<string, string>(), "Done"));
 
         // Act
         var pipeline1 = builder.Build(terminal);
         var pipeline2 = builder.Build(terminal);
 
-        // Assert - After first build, components are consumed
-        // So second build should work with whatever remains
+        // Assert - Build is idempotent; both pipelines should work identically
         pipeline1.Should().NotBeNull();
         pipeline2.Should().NotBeNull();
+        // Both should produce the same result since middleware is preserved
+        var request = new HttpRequest("GET", "/test", new Dictionary<string, string>(), "");
+        var result1 = await pipeline1(request);
+        var result2 = await pipeline2(request);
+        result1.Body.Should().Be("Done");
+        result2.Body.Should().Be("Done");
     }
 
     [Fact]

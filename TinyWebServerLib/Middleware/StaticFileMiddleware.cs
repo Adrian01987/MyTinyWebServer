@@ -42,7 +42,7 @@ public static class StaticFileMiddleware
   /// builder.Use(StaticFileMiddleware.Create("./wwwroot"));
   /// </code>
   /// </example>
-  public static Func<Func<HttpRequest, Task<HttpResponse>>, Func<HttpRequest, Task<HttpResponse>>>
+  public static Func<RequestHandler, RequestHandler>
       Create(string rootPath)
   {
     // Resolve the full path once at creation time
@@ -103,7 +103,7 @@ public static class StaticFileMiddleware
   /// <param name="rootPath">The root directory from which to serve files.</param>
   /// <param name="defaultDocument">The default document to serve for directory requests (e.g., "index.html").</param>
   /// <returns>A middleware function that can be added to the pipeline.</returns>
-  public static Func<Func<HttpRequest, Task<HttpResponse>>, Func<HttpRequest, Task<HttpResponse>>>
+  public static Func<RequestHandler, RequestHandler>
       Create(string rootPath, string defaultDocument)
   {
     var fullRootPath = Path.GetFullPath(rootPath);

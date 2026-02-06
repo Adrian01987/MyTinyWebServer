@@ -8,31 +8,33 @@ namespace TinyWebServerLib.Middleware;
 /// </summary>
 public class MiddlewareBuilder
 {
-    private readonly Stack<Func<Func<HttpRequest, Task<HttpResponse>>, Func<HttpRequest, Task<HttpResponse>>>> components
-        = new();
+    private readonly List<Func<RequestHandler, RequestHandler>> components = [];
 
     /// <summary>
     /// Adds a middleware component to the pipeline.
     /// </summary>
     /// <param name="middleware">A function that receives the next delegate and returns a wrapped delegate.</param>
     /// <returns>The builder instance for method chaining.</returns>
-    public MiddlewareBuilder Use(Func<Func<HttpRequest, Task<HttpResponse>>, Func<HttpRequest, Task<HttpResponse>>> middleware)
+    public MiddlewareBuilder Use(Func<RequestHandler, RequestHandler> middleware)
     {
-        components.Push(middleware);
+        components.Add(middleware);
         return this;
     }
 
     /// <summary>
     /// Builds the middleware pipeline, composing all registered middleware around a terminal handler.
+    /// The first middleware added is the outermost (executes first).
+    /// This method is idempotent — calling it multiple times returns equivalent pipelines.
     /// </summary>
     /// <param name="terminal">The final handler that processes the request after all middleware.</param>
     /// <returns>A composed delegate representing the entire pipeline.</returns>
-    public Func<HttpRequest, Task<HttpResponse>> Build(Func<HttpRequest, Task<HttpResponse>> terminal)
+    public RequestHandler Build(RequestHandler terminal)
     {
-        Func<HttpRequest, Task<HttpResponse>> app = terminal;
-        while (components.Count > 0)
+        RequestHandler app = terminal;
+        // Iterate in reverse so that the first middleware added is the outermost
+        for (int i = components.Count - 1; i >= 0; i--)
         {
-            app = components.Pop()(app);
+            app = components[i](app);
         }
         return app;
     }

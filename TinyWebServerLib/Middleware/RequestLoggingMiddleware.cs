@@ -18,7 +18,7 @@ public static class RequestLoggingMiddleware
   /// builder.Use(RequestLoggingMiddleware.Create());
   /// </code>
   /// </example>
-  public static Func<Func<HttpRequest, Task<HttpResponse>>, Func<HttpRequest, Task<HttpResponse>>> Create()
+  public static Func<RequestHandler, RequestHandler> Create()
   {
     return next => async request =>
     {
@@ -61,7 +61,7 @@ public static class RequestLoggingMiddleware
   /// <param name="logHeaders">Whether to log request and response headers.</param>
   /// <param name="logBody">Whether to log request and response bodies.</param>
   /// <returns>A middleware function that can be added to the pipeline.</returns>
-  public static Func<Func<HttpRequest, Task<HttpResponse>>, Func<HttpRequest, Task<HttpResponse>>>
+  public static Func<RequestHandler, RequestHandler>
       CreateDetailed(bool logHeaders = true, bool logBody = false)
   {
     return next => async request =>

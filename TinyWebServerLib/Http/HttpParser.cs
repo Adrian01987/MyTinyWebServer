@@ -56,8 +56,9 @@ public static class HttpParser
             }
         }
 
-        string body = string.Join("\r\n", lines.SkipWhile(l => !string.IsNullOrWhiteSpace(l)).Skip(1));
-        return new HttpRequest(method, path, headers, body);
+        // Body is handled separately by the server via Content-Length header,
+        // since the parser may receive only the header portion of the request.
+        return new HttpRequest(method, path, headers, string.Empty);
     }
 }
 

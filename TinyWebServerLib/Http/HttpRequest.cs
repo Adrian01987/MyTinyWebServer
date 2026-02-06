@@ -3,25 +3,42 @@
 /// <summary>
 /// Represents an incoming HTTP request with its method, path, headers, body, and request-scoped services.
 /// </summary>
-/// <param name="method">The HTTP method (GET, POST, PUT, DELETE, etc.).</param>
-/// <param name="path">The request path (e.g., "/customers/123").</param>
-/// <param name="headers">The HTTP headers as key-value pairs.</param>
-/// <param name="body">The request body content.</param>
-public class HttpRequest(string method, string path, Dictionary<string, string> headers, string body)
+public class HttpRequest
 {
     private Dictionary<string, string>? queryParameters;
 
+    /// <summary>
+    /// Creates a new HTTP request.
+    /// </summary>
+    /// <param name="method">The HTTP method (GET, POST, PUT, DELETE, etc.).</param>
+    /// <param name="path">The request path (e.g., "/customers/123").</param>
+    /// <param name="headers">The HTTP headers as key-value pairs.</param>
+    /// <param name="body">The request body content.</param>
+    /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
+    public HttpRequest(string method, string path, Dictionary<string, string> headers, string body)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(headers);
+        ArgumentNullException.ThrowIfNull(body);
+
+        Method = method;
+        Path = path;
+        Headers = headers;
+        Body = body;
+    }
+
     /// <summary>Gets or sets the HTTP method.</summary>
-    public string Method { get; set; } = method ?? string.Empty;
+    public string Method { get; set; }
 
     /// <summary>Gets or sets the request path (including query string if present).</summary>
-    public string Path { get; set; } = path ?? string.Empty;
+    public string Path { get; set; }
 
     /// <summary>Gets or sets the HTTP headers.</summary>
-    public Dictionary<string, string> Headers { get; set; } = headers ?? [];
+    public Dictionary<string, string> Headers { get; set; }
 
     /// <summary>Gets or sets the request body content.</summary>
-    public string Body { get; set; } = body ?? string.Empty;
+    public string Body { get; set; }
 
     /// <summary>Gets or sets the route parameters extracted from the URL path.</summary>
     public Dictionary<string, object> RouteParameters { get; set; } = [];
